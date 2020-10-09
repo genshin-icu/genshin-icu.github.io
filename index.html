@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原神今天bug修复了多少？</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet/less" type="text/less" href="styles.less" />
+    <script src="https://cdn.bootcdn.net/ajax/libs/less.js/3.9.0/less.min.js"></script>
+    <!--  -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.18.0/bootstrap-table.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <header class="flex flex-center flex-column full">
+        <div id="title">原神今天 bug 修复了多少？</div>
+        <div style="flex:1"></div>
+        <span id="bug-num"></span>
+        <div style="flex:1"></div>
+        <div id="bug-text"> 现存bug</div>
+    </header>
+    <main class="flex flex-center" style="align-items: flex-start;">
+        <div id="left" class="half flex flex-center flex-column">
+            <div class="caption">已修复或修改</div>
+            <table id="fixed">
+            </table>
+        </div>
+        <div id="right" class="half flex flex-center flex-column">
+            <div class="caption">现存</div>
+            <table id="existing"></table>
+        </div>
+    </main>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.18.0/bootstrap-table.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/moment.js/2.29.0/moment.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/moment.js/2.29.0/locale/zh-cn.min.js"></script>
+    <script>
+        function fromNow(m) {
+            let start = moment(m, "YYYY-MM-DD hh:mm:ss");
+            let now = moment();
+            let n = now.diff(start) / 1000; // seconds
+            let ans = "";
+            if (n > 0) {
+                ans = Math.floor(n % 60) + "秒";
+                n = Math.floor(n / 60);
+            }
+            if (n > 0) {
+                ans = Math.floor(n % 60) + "分钟 " + ans;
+                n = Math.floor(n / 60);
+            }
+            if (n > 0) {
+                ans = Math.floor(n % 24) + "小时 " + ans;
+                n = Math.floor(n / 24);
+            }
+            if (n > 0) {
+                ans = n + "天 <br> " + ans;
+            }
+            return ans;
+        }
+
+        function update() {
+            let table = $('#existing');
+            let data = table.bootstrapTable('getData');
+            for (let row in data) {
+                let value = fromNow(data[row].submit_at);
+                table.bootstrapTable('updateCell', { index: row, field: "existed_for", value });
+            }
+        }
+        $(function () {
+            $.getJSON("保护米宝.json").then((data) => {
+                $('#fixed').bootstrapTable({
+                    columns: [{
+                        title: "类型",
+                        field: "type",
+                        align: "center"
+                    }, {
+                        title: "描述",
+                        field: "desc",
+                        align: "center",
+                        width: 270,
+                        cellStyle: () => ({ css: { "font-size": "0.7rem" } })
+                    }, {
+                        title: "修复于",
+                        field: "fixed_at",
+                        align: "center",
+                        width: 120
+                    }, {
+                        title: "存活时长",
+                        align: "center",
+                        field: "existed_for"
+                    }, {
+                        title: "详情",
+                        field: "url",
+                        align: "center"
+                    }],
+                    data: data.map(item => {
+                        item.url = `<a href="${item.url}">详情</a>`;
+                        return item;
+                    })
+                });
+            });
+            $.getJSON("干死米哈游.json").then((data) => {
+                $('#existing').bootstrapTable({
+                    columns: [{
+                        title: "类型",
+                        field: "type",
+                        align: "center"
+                    }, {
+                        title: "描述",
+                        field: "desc",
+                        align: "center",
+                        width: 270,
+                        cellStyle: () => ({ css: { "font-size": "0.7rem" } })
+                    }, {
+                        title: "提交于",
+                        field: "submit_at",
+                        align: "center",
+                        width: 120
+                    }, {
+                        title: "存活时长",
+                        align: "center",
+                        field: "existed_for"
+                    }, {
+                        title: "详情",
+                        field: "url",
+                        align: "center"
+                    }],
+                    data: data.map(item => {
+                        item.url = `<a href="${item.url}">详情</a>`;
+                        item.existed_for = fromNow(item.submit_at);
+                        return item;
+                    })
+                });
+                $('#bug-num').text(data.length);
+            });
+            // TODO: update
+            setInterval(update, 1000);
+        });
+    </script>
+
+</body>
+
+</html>
